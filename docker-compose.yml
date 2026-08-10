@@ -1,0 +1,30 @@
+version: '3.8'
+
+# 3. Configuração de Rede Docker: rede no modo bridge
+networks:
+  korp-net:
+    driver: bridge
+
+services:
+  # Container 1: http-server-projeto-korp
+  http-server-projeto-korp:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: http-server-projeto-korp
+    networks:
+      - korp-net
+    # Note que não há diretiva "ports" aqui, atendendo à exigência de não expor portas ao host.
+
+  # Container 2: nginx
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80" # Porta 80 do host mapeada para a porta 80 do container
+    volumes:
+      - ./nginx-conf:/etc/nginx/conf.d/ # Volume montado para as configurações
+    networks:
+      - korp-net
+    depends_on:
+      - http-server-projeto-korp
