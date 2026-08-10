@@ -17,13 +17,11 @@ type RespostaKorp struct {
 }
 
 var (
-	// Métrica 1: Volume de requisições (Counter)
 	totalRequisicoes = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "http_requisicoes_total",
 		Help: "O volume total de requisições HTTP recebidas",
 	})
 
-	// Métrica 2: Disponibilidade do serviço (Gauge)
 	disponibilidadeServico = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "http_servico_disponivel",
 		Help: "Disponibilidade do serviço (1 = Up, 0 = Down)",
