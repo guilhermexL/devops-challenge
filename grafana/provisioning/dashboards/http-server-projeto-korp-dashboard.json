@@ -1,0 +1,35 @@
+{
+  "title": "Projeto Korp - Monitoramento",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Disponibilidade do Serviço",
+      "targets": [
+        {
+          "expr": "http_servico_disponivel",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Volume de Requisições (Rate 1m)",
+      "targets": [
+        {
+          "expr": "rate(http_requisicoes_total[1m])",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 }
+    }
+  ],
+  "schemaVersion": 38,
+  "timezone": "browser",
+  "refresh": "5s"
+}
