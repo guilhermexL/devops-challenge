@@ -1,101 +1,98 @@
-# devops-challenge
+# Teste Técnico - Projeto Korp
 
-Visão geral
+Descrição
 
-Este repositório contém a solução para um desafio DevOps cujo objetivo é demonstrar competências em automação, containerização, infraestrutura como código, integração contínua e observabilidade. A aplicação aqui presente é uma base de referência para demonstrar práticas recomendadas de desenvolvimento, implantação e operação em ambientes modernos.
+Projeto demonstrativo que implementa um serviço HTTP simples escrito em Go e focado em práticas de DevOps: containerização, orquestração local, e observabilidade com Prometheus/Grafana. Serve como referência prática para construir, empacotar e monitorar um pequeno serviço em ambiente conteinerizado.
 
-Principais componentes
+O que a aplicação faz
 
-- Código da aplicação: microserviço/serviço monolítico (dependendo da implementação incluída neste repositório).
-- Containerização: Dockerfile(s) para criação de imagens reprodutíveis.
-- Orquestração local: docker-compose para facilitar execução e testes locais.
-- Infraestrutura (opcional): exemplos de IaC (Terraform/CloudFormation) e manifests Kubernetes quando aplicáveis.
-- CI/CD: pipeline de integração contínua (GitHub Actions) para build, testes e publicação de artefatos.
-- Observabilidade: recomendações para logs e métricas; integração com Prometheus/Grafana/ELK quando disponível.
+- Expõe o endpoint HTTP GET /projeto-korp que retorna um JSON com o nome do projeto e o horário atual (UTC).
+- Expõe métricas Prometheus em /metrics, incluindo:
+  - http_requisicoes_total (counter): total de requisições HTTP recebidas
+  - http_servico_disponivel (gauge): disponibilidade do serviço (1 = up, 0 = down)
+
+Principais arquivos
+
+- main.go — código-fonte do serviço HTTP e métricas Prometheus.
+- Dockerfile — build multi-stage para gerar imagem mínima em Alpine.
+- docker-compose.yml — orquestração local com: app, nginx (proxy), Prometheus e Grafana (dashboard provisionado).
+- prometheus/prometheus.yml — configuração do Prometheus para raspar o serviço.
+- grafana/provisioning — datasource e dashboard pré-configurados.
+- playbook.yml — playbook Ansible para instalar dependências locais, subir o compose e validar o endpoint.
 
 Requisitos
 
 - Git
-- Docker & Docker Compose (para execução local)
-- (Opcional) Terraform, kubectl, Helm — caso utilize infra/cluster Kubernetes
-- (Opcional) Conta em Docker Hub / registro de container para publicação de imagens
+- Docker e Docker Compose
+- Go (para build/local) — versão >= 1.25 (opcional se usar Docker)
+- (Opcional) Ansible para executar playbook.yml
 
-Instalação e execução local
+Executando localmente (modo recomendado: Docker Compose)
 
-1. Clonar o repositório:
+1. Clone o repositório e entre na pasta:
 
    git clone https://github.com/guilhermexL/devops-challenge.git
    cd devops-challenge
 
-2. Inspecionar arquivos de apoio (Dockerfile, docker-compose.yml, Makefile, scripts/)
+2. Suba os serviços (build da imagem da aplicação + Prometheus/Grafana/nginx):
 
-3. Executar com Docker Compose:
+   docker compose up --build
 
-   docker-compose up --build
+3. Acesse:
 
-4. Acessar a aplicação em http://localhost:PORT (substituir PORT conforme docker-compose.yml)
+- API: http://localhost/projeto-korp  (via Nginx, porta 80)
+- Prometheus: http://localhost:9090    (se exposto localmente pelo compose)
+- Grafana: http://localhost:3000
 
-Testes
+Exemplo de chamada ao endpoint
 
-- Executar a suíte de testes automatizados (unit / integração):
+curl -s http://localhost/projeto-korp | jq
 
-  make test
+Resposta esperada:
 
-  ou
+{
+  "nome": "Projeto Korp",
+  "horario": "2026-08-12T...Z"
+}
 
-  ./scripts/test.sh
+Build e execução sem Docker
 
-- Validar pipelines de lint/format conforme as ferramentas configuradas (eslint, flake8, gofmt, etc.).
+1. Fazer build local (necessário Go instalado):
 
-CI/CD
+   go build -o http-server-projeto-korp .
+   ./http-server-projeto-korp
 
-- Pipeline GitHub Actions (/.github/workflows) realiza:
-  - Build da imagem
-  - Execução de testes e lint
-  - Publicação de imagem em registry (quando marcado)
-  - Deploy automático em ambiente de staging/production conforme configuração dos secrets
+2. Serviço ficará disponível na porta 8080, métricas em /metrics.
 
-Deployment
+Observabilidade
 
-- Para deploy em Kubernetes, verificar manifests em k8s/ ou helm/ e aplicar:
+- Prometheus é configurado (prometheus/prometheus.yml) para raspar o endpoint do serviço.
+- Grafana tem um dashboard provisionado em grafana/provisioning/dashboards/ que mostra disponibilidade e taxa de requisições.
+- Métricas relevantes:
+  - http_requisicoes_total
+  - http_servico_disponivel
 
-  kubectl apply -f k8s/
+Playbook Ansible
 
-- Para deploy em VM ou serviço PaaS, adaptar Dockerfile e usar o registry configurado.
+O playbook playbook.yml automatiza:
+- Instalação de dependências do sistema (apt)
+- Instalação do Docker e plugin docker-compose
+- Execução de docker compose up --build
+- Teste HTTP para validar que /projeto-korp responde 200
 
-Arquitetura e boas práticas
+Uso:
 
-- Imagens otimizadas e multi-stage builds para reduzir tamanho final.
-- Variáveis de ambiente para configuração (12-factor app).
-- Healthchecks e readiness probes (quando aplicado em Kubernetes).
-- Logs estruturados (JSON) para facilitar ingestão por sistemas de observabilidade.
+   ansible-playbook playbook.yml --connection=local
 
-Estrutura do repositório (exemplo)
+Testes e lint
 
-- /app                      -> código-fonte da aplicação
-- /Dockerfile               -> imagem da aplicação
-- /docker-compose.yml       -> orquestração local
-- /k8s                     -> manifests Kubernetes (se aplicável)
-- /.github/workflows        -> definições de CI/CD
-- /scripts                  -> scripts de suporte (build, test, deploy)
-- /docs                     -> documentação adicional
+- Atualmente não há testes automatizados incluídos neste repositório. Para adicionar testes, crie pacotes _test.go e execute `go test ./...`.
+- Recomenda-se aplicar gofmt/golangci-lint em pipelines CI antes do build.
 
-Como contribuir
+Boas práticas e notas de produção
 
-Contribuições são bem-vindas. Para mudanças:
+- A imagem usa build multi-stage para reduzir tamanho final (alpine runtime).
+- Produção: adicionar healthchecks, logs estruturados, e configuração de variáveis via ENV.
+- Segurança: evite expor serviços de administração sem autenticação; proteger Grafana/Prometheus em ambientes públicos.
 
-1. Abrir uma issue descrevendo o objetivo
-2. Criar um branch com nome descritivo
-3. Abrir um Pull Request com descrição, testes e evidências
-
-Licença
-
-Este projeto está licenciado sob a licença MIT — ver arquivo LICENSE para detalhes.
-
-Contato
-
-Para dúvidas ou informações adicionais, abra uma issue no repositório ou contate o mantenedor no perfil do GitHub.
-
-Notas finais
-
-O README oferece um panorama completo e pode ser adaptado para refletir detalhes técnicos específicos da stack usada neste repositório (linguagem, portas, comandos exatos de build/test). Atualize as seções de execução e testes conforme os scripts e arquivos presentes na árvore do projeto.
+*Esse repositório serve como realização do desafio técnico para o cargo de DevOps na Korp.*
