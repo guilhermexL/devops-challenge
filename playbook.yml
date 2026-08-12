@@ -1,0 +1,57 @@
+---
+- name: Provisionamento do Ambiente DevOps Korp
+  hosts: localhost
+  connection: local
+  become: true
+
+  tasks:
+    - name: 1. Atualizar o cache do apt
+      ansible.builtin.apt:
+        update_cache: true
+      ignore_errors: true
+
+    - name: 2. Instalar dependências necessárias do sistema
+      ansible.builtin.apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+          - python3-pip
+        state: present
+      ignore_errors: true
+
+    - name: 3. Instalar o Docker e o Docker Compose plugin
+      ansible.builtin.apt:
+        name:
+          - docker.io
+          - docker-compose-v2
+        state: present
+      ignore_errors: true
+
+    - name: 4. Garantir que o serviço do Docker esteja rodando e habilitado
+      ansible.builtin.systemd:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: 5. Subir a infraestrutura (Build, Rede e Containers) com Docker Compose
+      ansible.builtin.command:
+        cmd: docker compose up --build -d
+        chdir: "{{ playbook_dir }}"
+
+    - name: 6. Aguardar alguns segundos para os serviços inicializarem
+      ansible.builtin.pause:
+        seconds: 10
+
+    - name: 7. Validar o funcionamento do serviço (Teste HTTP)
+      ansible.builtin.uri:
+        url: http://localhost:80/projeto-korp
+        method: GET
+        return_content: true
+      register: http_response
+      failed_when: http_response.status != 200
+
+    - name: 8. Exibir a resposta do teste no console
+      ansible.builtin.debug:
+        msg: "Sucesso! A API retornou: {{ http_response.content }}"
