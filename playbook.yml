@@ -1,5 +1,5 @@
 ---
-- name: Provisionamento do Ambiente DevOps Korp
+- name: Provisionamento do Ambiente DevOps Looper
   hosts: localhost
   connection: local
   become: true
@@ -46,7 +46,7 @@
 
     - name: 7. Validar o funcionamento do serviço (Teste HTTP)
       ansible.builtin.uri:
-        url: http://localhost:80/projeto-korp
+        url: http://localhost:80/projeto-looper
         method: GET
         return_content: true
       register: http_response

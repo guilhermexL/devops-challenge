@@ -1,15 +1,15 @@
 networks:
-  korp-net:
+  looper-net:
     driver: bridge
 
 services:
-  http-server-projeto-korp:
+  http-server-projeto-looper:
     build: 
       context: .
       dockerfile: Dockerfile
-    container_name: http-server-projeto-korp
+    container_name: http-server-projeto-looper
     networks:
-      - korp-net
+      - looper-net
 
   nginx:
     image: nginx:latest
@@ -19,9 +19,9 @@ services:
     volumes:
       - ./nginx-conf:/etc/nginx/conf.d/
     networks:
-      - korp-net
+      - looper-net
     depends_on:
-      - http-server-projeto-korp
+      - http-server-projeto-looper
 
   prometheus:
     image: prom/prometheus:latest
@@ -29,9 +29,9 @@ services:
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     networks:
-      - korp-net
+      - looper-net
     depends_on:
-      - http-server-projeto-korp
+      - http-server-projeto-looper
 
   grafana:
     image: grafana/grafana:latest
@@ -42,6 +42,6 @@ services:
       - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
       - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
     networks:
-      - korp-net
+      - looper-net
     depends_on:
       - prometheus

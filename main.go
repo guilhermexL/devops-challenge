@@ -11,7 +11,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-type RespostaKorp struct {
+type RespostaLooper struct {
 	Nome    string `json:"nome"`
 	Horario string `json:"horario"`
 }
@@ -28,11 +28,11 @@ var (
 	})
 )
 
-func handlerProjetoKorp(w http.ResponseWriter, r *http.Request) {
+func handlerProjetoLooper(w http.ResponseWriter, r *http.Request) {
 	totalRequisicoes.Inc()
 
-	resposta := RespostaKorp{
-		Nome:    "Projeto Korp",
+	resposta := RespostaLooper{
+		Nome:    "Projeto Looper",
 		Horario: time.Now().UTC().Format(time.RFC3339),
 	}
 
@@ -44,10 +44,10 @@ func handlerProjetoKorp(w http.ResponseWriter, r *http.Request) {
 func main() {
 	disponibilidadeServico.Set(1)
 
-	http.HandleFunc("/projeto-korp", handlerProjetoKorp)
+	http.HandleFunc("/projeto-looper", handlerProjetoLooper)
 	http.Handle("/metrics", promhttp.Handler())
 
-	log.Println("Servidor http-server-projeto-korp iniciado na porta 8080...")
+	log.Println("Servidor http-server-projeto-looper iniciado na porta 8080...")
 
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatalf("Erro ao iniciar o servidor: %v", err)

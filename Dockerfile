@@ -11,7 +11,7 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o http-server-projeto-korp .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o http-server-projeto-looper .
 
 # ==========================================
 # Estágio 2: Final (Imagem de produção)
@@ -22,8 +22,8 @@ RUN apk --no-cache add ca-certificates
 
 WORKDIR /root/
 
-COPY --from=builder /app/http-server-projeto-korp .
+COPY --from=builder /app/http-server-projeto-looper .
 
 EXPOSE 8080
 
-CMD ["./http-server-projeto-korp"]
+CMD ["./http-server-projeto-looper"]
